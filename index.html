@@ -28,7 +28,7 @@
             align-items: center;
         }
 
-        /* Das neue Panel für die deutschen Parteien am linken Rand */
+        /* Das Panel für die deutschen Parteien am linken Rand */
         .german-panel {
             position: fixed;
             left: 30px;
@@ -50,13 +50,20 @@
         }
 
         .german-panel h3 {
-            margin: 0 0 10px 0;
+            margin: 0;
             font-size: 16px;
             color: #aaaaaa;
             text-transform: uppercase;
             letter-spacing: 1px;
             border-bottom: 1px solid #333;
             padding-bottom: 10px;
+        }
+
+        /* NEU: Flexbox-Layout für die Liste, um den vertikalen Abstand zu erzwingen */
+        #german-party-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px; /* Hierdurch entsteht der gleichmäßige Abstand zwischen den Logos */
         }
 
         .party-item {
@@ -69,7 +76,7 @@
             width: 50px;
             height: 50px;
             object-fit: contain;
-            background: #ffffff; /* Weißer Hintergrund für transparente Logos */
+            background: #ffffff;
             border-radius: 6px;
             padding: 2px;
         }
@@ -179,7 +186,6 @@
 </head>
 <body>
 
-    <!-- Linkes Panel für deutsche Parteien -->
     <div class="german-panel" id="german-panel">
         <h3>Deutsche Parteien</h3>
         <div id="german-party-list"></div>
@@ -322,7 +328,6 @@
             path.setAttribute('class', 'faction-path');
 
             path.addEventListener('mouseenter', () => {
-                // Zentrales Tooltip konfigurieren
                 ttImg.src = faction.file;
                 ttSeats.textContent = faction.seats;
                 tooltip.style.borderColor = faction.color;
@@ -339,7 +344,6 @@
 
                 tooltip.style.transform = `${transformBase} scale(0.8)`;
 
-                // Linkes Panel für deutsche Parteien konfigurieren
                 germanPanel.style.borderColor = faction.color;
                 germanPartyList.innerHTML = '';
 
@@ -354,7 +358,6 @@
                     germanPartyList.innerHTML = '<span class="no-parties">Keine Abgeordneten aus Deutschland.</span>';
                 }
 
-                // Animationen starten
                 requestAnimationFrame(() => {
                     tooltip.style.opacity = '1';
                     tooltip.style.transform = `${transformBase} scale(1)`;
