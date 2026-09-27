@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Europäisches Parlament 2024-2029</title>
     <style>
-        /* Reset und Grundeinstellungen */
         * { box-sizing: border-box; }
         body {
             margin: 0;
@@ -16,168 +15,180 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            overflow: hidden; /* Ideal für PowerPoint Einbettung */
+            overflow: hidden;
         }
 
-        /*
-         * Container im 16:9 Format für Präsentationen.
-         * Dadurch bleiben die Positionen immer im perfekten Verhältnis.
-         */
+        /* Container hält die Proportionen der Originalgrafik bei */
         .presentation-box {
             position: relative;
             width: 100%;
-            max-width: 1200px;
-            aspect-ratio: 16 / 9;
+            max-width: 1000px;
+            aspect-ratio: 1.1 / 1; /* Angepasst an das fast quadratische Format der Grafik */
             background-color: #ffffff;
             overflow: hidden;
         }
 
-        /* Dekorative Halbkreise im Hintergrund (deutet die Sitze an) */
-        .hemicycle-bg {
+        /* Zentrierter Text wie in der Vorlage */
+        .center-text {
             position: absolute;
-            bottom: 25%;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            width: 55%;
-            z-index: 0;
-            opacity: 0.6;
-        }
-
-        /* Text in der Mitte der Grafik */
-        .center-info {
-            position: absolute;
-            bottom: 25%;
-            left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
             text-align: center;
-            z-index: 1;
+            z-index: 2;
+            width: 100%;
         }
 
-        .center-info h1 {
-            margin: 0;
-            font-size: 2.2vw;
+        .center-text .total-seats {
+            font-size: 2.5vw;
+            font-weight: bold;
             color: #000;
+            margin-bottom: 7vw; /* Platz für das Halbrund */
         }
 
-        .center-info h2 {
+        .center-text h1 {
+            font-size: 3vw;
             margin: 0;
-            font-size: 1.8vw;
-            color: #333;
+            color: #000;
+            font-weight: 800;
+        }
+
+        .center-text h2 {
+            font-size: 2.2vw;
+            margin: 5px 0 15px 0;
+            color: #000;
             font-weight: normal;
         }
 
-        .center-info p {
-            margin: 10px 0 0 0;
-            font-size: 1.5vw;
-            font-weight: bold;
-            color: #555;
-        }
-
-        /* Einzelne Fraktions-Punkte (geschlossener Zustand) */
-        .fraction-node {
-            position: absolute;
-            width: 5vw;
-            height: 5vw;
-            min-width: 50px;
-            min-height: 50px;
-            border-radius: 50%;
-            background-color: var(--f-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            transform: translate(-50%, -50%);
-            z-index: 5;
-            border: 2px solid white;
-        }
-
-        /* Geschlossener Text (Kürzel) */
-        .node-closed {
-            font-weight: bold;
+        .center-text p {
             font-size: 1.2vw;
-            transition: opacity 0.2s;
-            text-align: center;
+            color: #000;
+            margin: 2px 0;
         }
 
-        /* Hover-Effekt: Box vergrößert sich zu einem Rechteck */
-        .fraction-node:hover {
-            width: 14vw;
-            height: 9vw;
-            min-width: 150px;
-            min-height: 100px;
-            border-radius: 12px;
-            z-index: 20;
-            background-color: white;
-            border: 4px solid var(--f-color);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
-        }
-
-        .fraction-node:hover .node-closed {
-            opacity: 0;
+        /* Gepunktetes Halbrund (simuliert die Sitze) */
+        .hemicycle {
             position: absolute;
-            pointer-events: none;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 55%;
+            height: 55%;
+            z-index: 1;
         }
 
-        /* Offener Zustand (Logo + Sitze) */
-        .node-open {
+        /* Interaktive Fraktions-Boxen */
+        .party-box {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* Initialer Zustand: Kleiner farbiger Punkt */
+        .box-trigger {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--bg-color);
+            border: 2px solid var(--border-color, var(--bg-color));
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color, white);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Versteckter Inhalt (Sitzzahl + Logo) */
+        .box-content {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background-color: var(--bg-color);
+            border: 2px solid var(--border-color, var(--bg-color));
+            border-radius: 4px;
             opacity: 0;
+            pointer-events: none;
+            transform: scale(0.5);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: flex;
             flex-direction: column;
-            align-items: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        /* Layout innerhalb der entfalteten Karte */
+        .box-content .seats {
+            flex: 1;
+            display: flex;
             justify-content: center;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            transform: scale(0.8);
-            transition: all 0.3s ease;
-            pointer-events: none;
-        }
-
-        .fraction-node:hover .node-open {
-            opacity: 1;
-            transform: scale(1);
-            transition-delay: 0.1s;
-        }
-
-        .node-open img {
-            max-width: 80%;
-            max-height: 50%;
-            object-fit: contain;
-            margin-bottom: 5px;
-        }
-
-        .node-open .seats {
-            font-size: 1.8vw;
+            align-items: flex-end;
+            font-size: 32px;
             font-weight: 900;
-            color: var(--f-color);
-            line-height: 1;
+            color: var(--text-color, white);
+            padding-bottom: 5px;
         }
 
-        .node-open .label {
-            font-size: 0.9vw;
-            color: #666;
-            text-transform: uppercase;
-            font-weight: bold;
+        .box-content .logo-area {
+            flex: 1;
+            background-color: var(--logo-bg, transparent);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
         }
 
-        /* Farben basierend auf der Grafik */
-        .f-left { --f-color: #c92a2a; top: 70%; left: 18%; }
-        .f-sd { --f-color: #f0001c; top: 45%; left: 20%; }
-        .f-greens { --f-color: #2b8a3e; top: 20%; left: 32%; }
-        .f-renew { --f-color: #0087dc; top: 12%; left: 45%; }
-        .f-epp { --f-color: #003399; top: 12%; left: 58%; }
-        .f-ecr { --f-color: #00008b; top: 20%; left: 72%; }
-        .f-patriots { --f-color: #1c355e; top: 45%; left: 82%; }
-        .f-esn { --f-color: #152e4d; top: 70%; left: 85%; }
-        .f-ni { --f-color: #868e96; top: 85%; left: 73%; }
+        .box-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Hover-Effekte */
+        .party-box:hover { z-index: 20; }
+        .party-box:hover .box-trigger { opacity: 0; transform: scale(0); }
+        .party-box:hover .box-content { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+        /* --- FRAKTIONEN: Farben & Exakte Positionen analog zur Grafik --- */
+
+        /* Renew: Oben Links */
+        .f-renew { top: 12%; left: 28%; --bg-color: #0087dc; }
+
+        /* Greens: Mitte Links */
+        .f-greens { top: 25%; left: 16%; --bg-color: #2b8a3e; }
+
+        /* S&D: Unten Links */
+        .f-sd { top: 52%; left: 12%; --bg-color: #e3001b; }
+
+        /* The Left: Ganz unten Links (Weißer Hintergrund, Rote Schrift) */
+        .f-left { top: 75%; left: 20%; --bg-color: #ffffff; --border-color: #999; --text-color: #c92a2a; }
+
+        /* EPP: Oben Rechts */
+        .f-epp { top: 10%; left: 62%; --bg-color: #003399; }
+
+        /* ECR: Mitte Rechts */
+        .f-ecr { top: 30%; left: 82%; --bg-color: #004a99; }
+
+        /* Patriots: Unten Mitte Rechts */
+        .f-patriots { top: 52%; left: 82%; --bg-color: #1c355e; }
+
+        /* ESN: Unten Rechts */
+        .f-esn { top: 70%; left: 80%; --bg-color: #152e4d; }
+
+        /* NI: Ganz unten Rechts (Grau) */
+        .f-ni { top: 80%; left: 70%; --bg-color: #777777; }
 
         @media (max-width: 800px) {
-            .node-closed { font-size: 14px; }
-            .node-open .seats { font-size: 20px; }
-            .node-open .label { font-size: 12px; }
+            .box-content { width: 90px; height: 90px; }
+            .box-content .seats { font-size: 24px; }
+            .center-text h1 { font-size: 4vw; }
+            .center-text h2 { font-size: 3vw; }
         }
     </style>
 </head>
@@ -185,100 +196,94 @@
 
     <div class="presentation-box">
 
-        <!-- Dekoratives Halbrund im Hintergrund (erzeugt den Sitz-Look) -->
-        <svg class="hemicycle-bg" viewBox="0 0 100 50">
-            <path d="M 5,50 A 45,45 0 0,1 95,50" fill="none" stroke="#e9ecef" stroke-width="6" stroke-dasharray="1 2" stroke-linecap="round"/>
-            <path d="M 15,50 A 35,35 0 0,1 85,50" fill="none" stroke="#dee2e6" stroke-width="8" stroke-dasharray="1 2.5" stroke-linecap="round"/>
-            <path d="M 25,50 A 25,25 0 0,1 75,50" fill="none" stroke="#ced4da" stroke-width="10" stroke-dasharray="1 3" stroke-linecap="round"/>
+        <!-- Gepunktetes Halbrund (Zentrum) -->
+        <svg class="hemicycle" viewBox="0 0 100 50">
+            <!-- Mehrere Halbkreise, gestrichelt, um die Sitze anzudeuten -->
+            <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="#d3d3d3" stroke-width="3" stroke-dasharray="1 3" stroke-linecap="round"/>
+            <path d="M 20,50 A 30,30 0 0,1 80,50" fill="none" stroke="#a9a9a9" stroke-width="4" stroke-dasharray="1 3.5" stroke-linecap="round"/>
+            <path d="M 30,50 A 20,20 0 0,1 70,50" fill="none" stroke="#808080" stroke-width="5" stroke-dasharray="1 4" stroke-linecap="round"/>
         </svg>
 
-        <!-- Zentrale Information -->
-        <div class="center-info">
+        <!-- Zentraler Textblock -->
+        <div class="center-text">
+            <div class="total-seats">720<br>Sitze</div>
             <h1>Europäisches Parlament</h1>
             <h2>2024–2029</h2>
-            <p>720 Sitze</p>
+            <p>Konstituierende Sitzung</p>
+            <p>am 16. Juli 2024</p>
         </div>
 
-        <!-- Fraktionen -->
-        <div class="fraction-node f-left">
-            <div class="node-closed">LEFT</div>
-            <div class="node-open">
-                <img src="assets/theleft.png" alt="The Left">
-                <div class="seats">46</div>
-                <div class="label">Sitze</div>
-            </div>
-        </div>
-
-        <div class="fraction-node f-sd">
-            <div class="node-closed">S&D</div>
-            <div class="node-open">
-                <img src="assets/sd.png" alt="S&D">
-                <div class="seats">136</div>
-                <div class="label">Sitze</div>
-            </div>
-        </div>
-
-        <div class="fraction-node f-greens">
-            <div class="node-closed">Grüne</div>
-            <div class="node-open">
-                <img src="assets/greensefa.png" alt="Greens/EFA">
-                <div class="seats">53</div>
-                <div class="label">Sitze</div>
-            </div>
-        </div>
-
-        <div class="fraction-node f-renew">
-            <div class="node-closed">Renew</div>
-            <div class="node-open">
-                <img src="assets/reneweurope.png" alt="Renew Europe">
+        <!-- LINKER FLÜGEL -->
+        <div class="party-box f-renew">
+            <div class="box-trigger">RE</div>
+            <div class="box-content">
                 <div class="seats">77</div>
-                <div class="label">Sitze</div>
+                <div class="logo-area"><img src="assets/reneweurope.png" alt="Renew Europe"></div>
             </div>
         </div>
 
-        <div class="fraction-node f-epp">
-            <div class="node-closed">EPP</div>
-            <div class="node-open">
-                <!-- WICHTIG: Die epp.png fehlte in Ihrer Aufzählung! Bitte hinzufügen. -->
-                <img src="assets/epp.png" alt="EPP">
+        <div class="party-box f-greens">
+            <div class="box-trigger">GR</div>
+            <div class="box-content">
+                <div class="seats">53</div>
+                <div class="logo-area"><img src="assets/greensefa.png" alt="Greens/EFA"></div>
+            </div>
+        </div>
+
+        <div class="party-box f-sd">
+            <div class="box-trigger">S&D</div>
+            <div class="box-content">
+                <div class="seats">136</div>
+                <div class="logo-area"><img src="assets/sd.png" alt="S&D"></div>
+            </div>
+        </div>
+
+        <div class="party-box f-left">
+            <div class="box-trigger">LEFT</div>
+            <div class="box-content">
+                <div class="seats">46</div>
+                <div class="logo-area"><img src="assets/theleft.png" alt="The Left"></div>
+            </div>
+        </div>
+
+        <!-- RECHTER FLÜGEL -->
+        <div class="party-box f-epp">
+            <div class="box-trigger">EPP</div>
+            <div class="box-content">
                 <div class="seats">188</div>
-                <div class="label">Sitze</div>
+                <div class="logo-area"><img src="assets/epp.png" alt="EPP"></div>
             </div>
         </div>
 
-        <div class="fraction-node f-ecr">
-            <div class="node-closed">ECR</div>
-            <div class="node-open">
-                <img src="assets/ecr.png" alt="ECR">
+        <div class="party-box f-ecr">
+            <div class="box-trigger">ECR</div>
+            <div class="box-content">
                 <div class="seats">78</div>
-                <div class="label">Sitze</div>
+                <div class="logo-area"><img src="assets/ecr.png" alt="ECR"></div>
             </div>
         </div>
 
-        <div class="fraction-node f-patriots">
-            <div class="node-closed">Patriots</div>
-            <div class="node-open">
-                <img src="assets/patriots.png" alt="Patriots for Europe">
+        <div class="party-box f-patriots">
+            <div class="box-trigger">PAT</div>
+            <div class="box-content">
                 <div class="seats">84</div>
-                <div class="label">Sitze</div>
+                <div class="logo-area"><img src="assets/patriots.png" alt="Patriots for Europe"></div>
             </div>
         </div>
 
-        <div class="fraction-node f-esn">
-            <div class="node-closed">ESN</div>
-            <div class="node-open">
-                <img src="assets/esn.png" alt="ESN">
+        <div class="party-box f-esn">
+            <div class="box-trigger">ESN</div>
+            <div class="box-content">
                 <div class="seats">25</div>
-                <div class="label">Sitze</div>
+                <div class="logo-area"><img src="assets/esn.png" alt="ESN"></div>
             </div>
         </div>
 
-        <div class="fraction-node f-ni">
-            <div class="node-closed">NI</div>
-            <div class="node-open">
-                <img src="assets/nofraction.png" alt="Fraktionslos">
+        <div class="party-box f-ni">
+            <div class="box-trigger">NI</div>
+            <div class="box-content" style="--logo-bg: white;">
                 <div class="seats">32</div>
-                <div class="label">Fraktionslos</div>
+                <div class="logo-area"><img src="assets/nofraction.png" alt="Fraktionslos"></div>
             </div>
         </div>
 
