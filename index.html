@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Europäisches Parlament 2024-2029</title>
     <style>
-        * { box-sizing: border-box; }
         body {
             margin: 0;
             padding: 0;
@@ -18,276 +17,220 @@
             overflow: hidden;
         }
 
-        /* Container hält die Proportionen der Originalgrafik bei */
-        .presentation-box {
+        .chart-container {
             position: relative;
             width: 100%;
-            max-width: 1000px;
-            aspect-ratio: 1.1 / 1; /* Angepasst an das fast quadratische Format der Grafik */
-            background-color: #ffffff;
-            overflow: hidden;
-        }
-
-        /* Zentrierter Text wie in der Vorlage */
-        .center-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 2;
-            width: 100%;
-        }
-
-        .center-text .total-seats {
-            font-size: 2.5vw;
-            font-weight: bold;
-            color: #000;
-            margin-bottom: 7vw; /* Platz für das Halbrund */
-        }
-
-        .center-text h1 {
-            font-size: 3vw;
-            margin: 0;
-            color: #000;
-            font-weight: 800;
-        }
-
-        .center-text h2 {
-            font-size: 2.2vw;
-            margin: 5px 0 15px 0;
-            color: #000;
-            font-weight: normal;
-        }
-
-        .center-text p {
-            font-size: 1.2vw;
-            color: #000;
-            margin: 2px 0;
-        }
-
-        /* Gepunktetes Halbrund (simuliert die Sitze) */
-        .hemicycle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 55%;
-            height: 55%;
-            z-index: 1;
-        }
-
-        /* Interaktive Fraktions-Boxen */
-        .party-box {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            z-index: 10;
+            max-width: 900px;
+            aspect-ratio: 16 / 9;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        /* SVG Styling */
+        svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .faction-path {
+            stroke: #ffffff;
+            stroke-width: 1.5;
+            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-origin: 100px 105px; /* Zentrum des Halbkreises im viewBox */
             cursor: pointer;
         }
 
-        /* Initialer Zustand: Kleiner farbiger Punkt */
-        .box-trigger {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--bg-color);
-            border: 2px solid var(--border-color, var(--bg-color));
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--text-color, white);
-            font-weight: bold;
-            font-size: 14px;
+        /* Der Zoom-Effekt beim Hovern */
+        .faction-path:hover {
+            transform: scale(1.08);
+            stroke-width: 0.5;
+            z-index: 10;
         }
 
-        /* Versteckter Inhalt (Sitzzahl + Logo) */
-        .box-content {
+        /* Zentraler statischer Text */
+        .center-text {
             position: absolute;
-            width: 120px;
-            height: 120px;
-            background-color: var(--bg-color);
-            border: 2px solid var(--border-color, var(--bg-color));
-            border-radius: 4px;
-            opacity: 0;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
             pointer-events: none;
-            transform: scale(0.5);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .center-text .seats {
+            font-size: 3vw;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .center-text h1 {
+            font-size: 2.2vw;
+            margin: 10px 0 0 0;
+            color: #000;
+        }
+
+        .center-text h2 {
+            font-size: 1.8vw;
+            margin: 0;
+            color: #333;
+            font-weight: normal;
+        }
+
+        /* Tooltip (erscheint beim Hovern über einen Kreisabschnitt) */
+        .tooltip {
+            position: fixed;
+            top: -1000px;
+            left: -1000px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            padding: 15px;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        /* Layout innerhalb der entfalteten Karte */
-        .box-content .seats {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            font-size: 32px;
-            font-weight: 900;
-            color: var(--text-color, white);
-            padding-bottom: 5px;
-        }
-
-        .box-content .logo-area {
-            flex: 1;
-            background-color: var(--logo-bg, transparent);
-            display: flex;
-            justify-content: center;
             align-items: center;
-            padding: 10px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 100;
+            min-width: 120px;
+            border: 2px solid #eee;
         }
 
-        .box-content img {
-            max-width: 100%;
-            max-height: 100%;
+        .tooltip img {
+            max-width: 100px;
+            max-height: 80px;
             object-fit: contain;
+            margin-bottom: 10px;
         }
 
-        /* Hover-Effekte */
-        .party-box:hover { z-index: 20; }
-        .party-box:hover .box-trigger { opacity: 0; transform: scale(0); }
-        .party-box:hover .box-content { opacity: 1; transform: scale(1); pointer-events: auto; }
+        .tooltip .tt-seats {
+            font-size: 24px;
+            font-weight: 900;
+            color: #333;
+        }
 
-        /* --- FRAKTIONEN: Farben & Exakte Positionen analog zur Grafik --- */
-
-        /* Renew: Oben Links */
-        .f-renew { top: 12%; left: 28%; --bg-color: #0087dc; }
-
-        /* Greens: Mitte Links */
-        .f-greens { top: 25%; left: 16%; --bg-color: #2b8a3e; }
-
-        /* S&D: Unten Links */
-        .f-sd { top: 52%; left: 12%; --bg-color: #e3001b; }
-
-        /* The Left: Ganz unten Links (Weißer Hintergrund, Rote Schrift) */
-        .f-left { top: 75%; left: 20%; --bg-color: #ffffff; --border-color: #999; --text-color: #c92a2a; }
-
-        /* EPP: Oben Rechts */
-        .f-epp { top: 10%; left: 62%; --bg-color: #003399; }
-
-        /* ECR: Mitte Rechts */
-        .f-ecr { top: 30%; left: 82%; --bg-color: #004a99; }
-
-        /* Patriots: Unten Mitte Rechts */
-        .f-patriots { top: 52%; left: 82%; --bg-color: #1c355e; }
-
-        /* ESN: Unten Rechts */
-        .f-esn { top: 70%; left: 80%; --bg-color: #152e4d; }
-
-        /* NI: Ganz unten Rechts (Grau) */
-        .f-ni { top: 80%; left: 70%; --bg-color: #777777; }
-
-        @media (max-width: 800px) {
-            .box-content { width: 90px; height: 90px; }
-            .box-content .seats { font-size: 24px; }
-            .center-text h1 { font-size: 4vw; }
-            .center-text h2 { font-size: 3vw; }
+        .tooltip .tt-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #666;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <div class="presentation-box">
+    <div class="chart-container">
+        <!-- SVG Container für die Kreisabschnitte -->
+        <svg viewBox="0 0 200 120" id="hemicycle"></svg>
 
-        <!-- Gepunktetes Halbrund (Zentrum) -->
-        <svg class="hemicycle" viewBox="0 0 100 50">
-            <!-- Mehrere Halbkreise, gestrichelt, um die Sitze anzudeuten -->
-            <path d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="#d3d3d3" stroke-width="3" stroke-dasharray="1 3" stroke-linecap="round"/>
-            <path d="M 20,50 A 30,30 0 0,1 80,50" fill="none" stroke="#a9a9a9" stroke-width="4" stroke-dasharray="1 3.5" stroke-linecap="round"/>
-            <path d="M 30,50 A 20,20 0 0,1 70,50" fill="none" stroke="#808080" stroke-width="5" stroke-dasharray="1 4" stroke-linecap="round"/>
-        </svg>
-
-        <!-- Zentraler Textblock -->
         <div class="center-text">
-            <div class="total-seats">720<br>Sitze</div>
+            <div class="seats">720<br>Sitze</div>
             <h1>Europäisches Parlament</h1>
             <h2>2024–2029</h2>
-            <p>Konstituierende Sitzung</p>
-            <p>am 16. Juli 2024</p>
         </div>
-
-        <!-- LINKER FLÜGEL -->
-        <div class="party-box f-renew">
-            <div class="box-trigger">RE</div>
-            <div class="box-content">
-                <div class="seats">77</div>
-                <div class="logo-area"><img src="assets/reneweurope.png" alt="Renew Europe"></div>
-            </div>
-        </div>
-
-        <div class="party-box f-greens">
-            <div class="box-trigger">GR</div>
-            <div class="box-content">
-                <div class="seats">53</div>
-                <div class="logo-area"><img src="assets/greensefa.png" alt="Greens/EFA"></div>
-            </div>
-        </div>
-
-        <div class="party-box f-sd">
-            <div class="box-trigger">S&D</div>
-            <div class="box-content">
-                <div class="seats">136</div>
-                <div class="logo-area"><img src="assets/sd.png" alt="S&D"></div>
-            </div>
-        </div>
-
-        <div class="party-box f-left">
-            <div class="box-trigger">LEFT</div>
-            <div class="box-content">
-                <div class="seats">46</div>
-                <div class="logo-area"><img src="assets/theleft.png" alt="The Left"></div>
-            </div>
-        </div>
-
-        <!-- RECHTER FLÜGEL -->
-        <div class="party-box f-epp">
-            <div class="box-trigger">EPP</div>
-            <div class="box-content">
-                <div class="seats">188</div>
-                <div class="logo-area"><img src="assets/epp.png" alt="EPP"></div>
-            </div>
-        </div>
-
-        <div class="party-box f-ecr">
-            <div class="box-trigger">ECR</div>
-            <div class="box-content">
-                <div class="seats">78</div>
-                <div class="logo-area"><img src="assets/ecr.png" alt="ECR"></div>
-            </div>
-        </div>
-
-        <div class="party-box f-patriots">
-            <div class="box-trigger">PAT</div>
-            <div class="box-content">
-                <div class="seats">84</div>
-                <div class="logo-area"><img src="assets/patriots.png" alt="Patriots for Europe"></div>
-            </div>
-        </div>
-
-        <div class="party-box f-esn">
-            <div class="box-trigger">ESN</div>
-            <div class="box-content">
-                <div class="seats">25</div>
-                <div class="logo-area"><img src="assets/esn.png" alt="ESN"></div>
-            </div>
-        </div>
-
-        <div class="party-box f-ni">
-            <div class="box-trigger">NI</div>
-            <div class="box-content" style="--logo-bg: white;">
-                <div class="seats">32</div>
-                <div class="logo-area"><img src="assets/nofraction.png" alt="Fraktionslos"></div>
-            </div>
-        </div>
-
     </div>
+
+    <!-- Das interaktive Overlay -->
+    <div class="tooltip" id="tooltip">
+        <img id="tt-img" src="" alt="Logo">
+        <div class="tt-seats" id="tt-seats">0</div>
+        <div class="tt-label">Sitze</div>
+    </div>
+
+    <script>
+        // Daten der Fraktionen (Reihenfolge von Links nach Rechts)
+        const factions = [
+            { id: 'left', seats: 46, color: '#c92a2a', file: 'assets/theleft.png' },
+            { id: 'sd', seats: 136, color: '#e3001b', file: 'assets/sd.png' },
+            { id: 'greens', seats: 53, color: '#2b8a3e', file: 'assets/greensefa.png' },
+            { id: 'renew', seats: 77, color: '#0087dc', file: 'assets/reneweurope.png' },
+            { id: 'epp', seats: 188, color: '#003399', file: 'assets/epp.png' },
+            { id: 'ecr', seats: 78, color: '#004a99', file: 'assets/ecr.png' },
+            { id: 'patriots', seats: 84, color: '#1c355e', file: 'assets/patriots.png' },
+            { id: 'esn', seats: 25, color: '#152e4d', file: 'assets/esn.png' },
+            { id: 'ni', seats: 32, color: '#777777', file: 'assets/nofraction.png' }
+        ];
+
+        const totalSeats = 720;
+        const svg = document.getElementById('hemicycle');
+        const tooltip = document.getElementById('tooltip');
+        const ttImg = document.getElementById('tt-img');
+        const ttSeats = document.getElementById('tt-seats');
+
+        // Parameter für die Kreisberechnung
+        const cx = 100; // Zentrum X
+        const cy = 105; // Zentrum Y (leicht nach unten versetzt)
+        const radiusOuter = 95; // Äußerer Radius
+        const radiusInner = 45; // Innerer Radius
+
+        // Hilfsfunktion: Berechnet X/Y Koordinaten auf Basis eines Prozentwerts (0 bis 1) des Halbkreises
+        function getCoordinates(percent, radius) {
+            // PI (180 Grad) ist links, 0 ist rechts
+            const angle = Math.PI - (percent * Math.PI);
+            return {
+                x: cx + Math.cos(angle) * radius,
+                y: cy - Math.sin(angle) * radius
+            };
+        }
+
+        let cumulativePercent = 0;
+
+        // Generiere die SVG-Pfade für jede Fraktion
+        factions.forEach(faction => {
+            const percent = faction.seats / totalSeats;
+            const startPercent = cumulativePercent;
+            const endPercent = cumulativePercent + percent;
+            cumulativePercent += percent;
+
+            // Start- und Endpunkte für den äußeren und inneren Bogen
+            const startOuter = getCoordinates(startPercent, radiusOuter);
+            const endOuter = getCoordinates(endPercent, radiusOuter);
+            const startInner = getCoordinates(startPercent, radiusInner);
+            const endInner = getCoordinates(endPercent, radiusInner);
+
+            // SVG Path Syntax (M = Move, A = Arc, L = Line, Z = Close)
+            const pathData = [
+                `M ${startOuter.x} ${startOuter.y}`,
+                `A ${radiusOuter} ${radiusOuter} 0 0 1 ${endOuter.x} ${endOuter.y}`,
+                `L ${endInner.x} ${endInner.y}`,
+                `A ${radiusInner} ${radiusInner} 0 0 0 ${startInner.x} ${startInner.y}`,
+                `Z`
+            ].join(' ');
+
+            // Pfad-Element erstellen
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathData);
+            path.setAttribute('fill', faction.color);
+            path.setAttribute('class', 'faction-path');
+
+            // Hover-Events für den Tooltip hinzufügen
+            path.addEventListener('mouseenter', () => {
+                tooltip.style.opacity = '1';
+                ttImg.src = faction.file;
+                ttSeats.textContent = faction.seats;
+                tooltip.style.borderColor = faction.color;
+            });
+
+            path.addEventListener('mouseleave', () => {
+                tooltip.style.opacity = '0';
+            });
+
+            svg.appendChild(path);
+        });
+
+        // Tooltip soll der Maus folgen
+        document.addEventListener('mousemove', (e) => {
+            if (tooltip.style.opacity === '1') {
+                // Leichter Versatz nach rechts unten, damit der Cursor das Bild nicht verdeckt
+                tooltip.style.left = (e.pageX + 15) + 'px';
+                tooltip.style.top = (e.pageY + 15) + 'px';
+            }
+        });
+    </script>
 
 </body>
 </html>
