@@ -5,216 +5,280 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Europäisches Parlament 2024-2029</title>
     <style>
-        /* Grundlegendes Styling für die Einbettung (Vollbild, keine Scrollbalken) */
+        /* Reset und Grundeinstellungen */
+        * { box-sizing: border-box; }
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #ffffff;
-            height: 100vh;
             display: flex;
-            flex-direction: column;
-            overflow: hidden; /* Verhindert Scrollen in der Präsentation */
-        }
-
-        .header {
-            text-align: center;
-            padding: 20px 0;
-            background-color: #f8f9fa;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            z-index: 10;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #333;
-        }
-
-        .header p {
-            margin: 5px 0 0 0;
-            font-size: 16px;
-            color: #666;
-            font-weight: bold;
-        }
-
-        /* Container für die interaktiven Balken */
-        .parliament-container {
-            display: flex;
-            flex: 1;
-            padding: 20px;
-            gap: 8px;
-            align-items: stretch;
-            background-color: #f0f2f5;
-        }
-
-        /* Styling der einzelnen Fraktionen */
-        .fraction {
-            border-radius: 12px;
-            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            position: relative;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            height: 100vh;
+            overflow: hidden; /* Ideal für PowerPoint Einbettung */
         }
 
-        /* Initialer Zustand des Inhalts (versteckt) */
-        .fraction .content {
-            opacity: 0;
-            transform: translateY(20px) scale(0.9);
-            transition: all 0.4s ease;
+        /*
+         * Container im 16:9 Format für Präsentationen.
+         * Dadurch bleiben die Positionen immer im perfekten Verhältnis.
+         */
+        .presentation-box {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            aspect-ratio: 16 / 9;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        /* Dekorative Halbkreise im Hintergrund (deutet die Sitze an) */
+        .hemicycle-bg {
+            position: absolute;
+            bottom: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 55%;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        /* Text in der Mitte der Grafik */
+        .center-info {
+            position: absolute;
+            bottom: 25%;
+            left: 50%;
+            transform: translateX(-50%);
             text-align: center;
+            z-index: 1;
+        }
+
+        .center-info h1 {
+            margin: 0;
+            font-size: 2.2vw;
+            color: #000;
+        }
+
+        .center-info h2 {
+            margin: 0;
+            font-size: 1.8vw;
+            color: #333;
+            font-weight: normal;
+        }
+
+        .center-info p {
+            margin: 10px 0 0 0;
+            font-size: 1.5vw;
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* Einzelne Fraktions-Punkte (geschlossener Zustand) */
+        .fraction-node {
+            position: absolute;
+            width: 5vw;
+            height: 5vw;
+            min-width: 50px;
+            min-height: 50px;
+            border-radius: 50%;
+            background-color: var(--f-color);
             color: white;
-            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            border: 2px solid white;
+        }
+
+        /* Geschlossener Text (Kürzel) */
+        .node-closed {
+            font-weight: bold;
+            font-size: 1.2vw;
+            transition: opacity 0.2s;
+            text-align: center;
+        }
+
+        /* Hover-Effekt: Box vergrößert sich zu einem Rechteck */
+        .fraction-node:hover {
+            width: 14vw;
+            height: 9vw;
+            min-width: 150px;
+            min-height: 100px;
+            border-radius: 12px;
+            z-index: 20;
+            background-color: white;
+            border: 4px solid var(--f-color);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+        }
+
+        .fraction-node:hover .node-closed {
+            opacity: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* Offener Zustand (Logo + Sitze) */
+        .node-open {
+            opacity: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+            pointer-events: none;
         }
 
-        /* Hover-Effekt: Vergrößerung des Balkens */
-        .fraction:hover {
-            flex-grow: 15 !important; /* Starkes Wachstum bei Hover */
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        /* Hover-Effekt: Einblenden der Details */
-        .fraction:hover .content {
+        .fraction-node:hover .node-open {
             opacity: 1;
-            transform: translateY(0) scale(1);
-            transition-delay: 0.1s; /* Leichte Verzögerung für einen schöneren Effekt */
+            transform: scale(1);
+            transition-delay: 0.1s;
         }
 
-        /* Typografische Logos (können durch <img> Tags im HTML ersetzt werden) */
-        .logo-placeholder {
-            font-size: 32px;
-            font-weight: 900;
-            margin-bottom: 10px;
-            padding: 10px 15px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 8px;
-            backdrop-filter: blur(5px);
-        }
-
-        .seats {
-            font-size: 48px;
-            font-weight: bold;
-            line-height: 1;
+        .node-open img {
+            max-width: 80%;
+            max-height: 50%;
+            object-fit: contain;
             margin-bottom: 5px;
         }
 
-        .name {
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .node-open .seats {
+            font-size: 1.8vw;
+            font-weight: 900;
+            color: var(--f-color);
+            line-height: 1;
         }
 
-        /* Fraktions-Farben und initiale Breiten (basierend auf Sitzen) */
-        .f-left { background-color: #c92a2a; flex: 46; }
-        .f-sd { background-color: #f0001c; flex: 136; }
-        .f-greens { background-color: #2b8a3e; flex: 53; }
-        .f-renew { background-color: #0087dc; flex: 77; }
-        .f-epp { background-color: #003399; flex: 188; }
-        .f-ecr { background-color: #00008b; flex: 78; }
-        .f-patriots { background-color: #1c355e; flex: 84; }
-        .f-esn { background-color: #152e4d; flex: 25; }
-        .f-ni { background-color: #868e96; flex: 32; }
+        .node-open .label {
+            font-size: 0.9vw;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
 
-        @media (max-width: 768px) {
-            .parliament-container {
-                flex-direction: column;
-            }
-            .fraction:hover {
-                flex-grow: 5 !important;
-            }
-            .logo-placeholder { font-size: 20px; }
-            .seats { font-size: 28px; }
+        /* Farben basierend auf der Grafik */
+        .f-left { --f-color: #c92a2a; top: 70%; left: 18%; }
+        .f-sd { --f-color: #f0001c; top: 45%; left: 20%; }
+        .f-greens { --f-color: #2b8a3e; top: 20%; left: 32%; }
+        .f-renew { --f-color: #0087dc; top: 12%; left: 45%; }
+        .f-epp { --f-color: #003399; top: 12%; left: 58%; }
+        .f-ecr { --f-color: #00008b; top: 20%; left: 72%; }
+        .f-patriots { --f-color: #1c355e; top: 45%; left: 82%; }
+        .f-esn { --f-color: #152e4d; top: 70%; left: 85%; }
+        .f-ni { --f-color: #868e96; top: 85%; left: 73%; }
+
+        @media (max-width: 800px) {
+            .node-closed { font-size: 14px; }
+            .node-open .seats { font-size: 20px; }
+            .node-open .label { font-size: 12px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Europäisches Parlament 2024–2029</h1>
-        <p>Konstituierende Sitzung (Gesamt: 720 Sitze)</p>
-    </div>
+    <div class="presentation-box">
 
-    <div class="parliament-container">
+        <!-- Dekoratives Halbrund im Hintergrund (erzeugt den Sitz-Look) -->
+        <svg class="hemicycle-bg" viewBox="0 0 100 50">
+            <path d="M 5,50 A 45,45 0 0,1 95,50" fill="none" stroke="#e9ecef" stroke-width="6" stroke-dasharray="1 2" stroke-linecap="round"/>
+            <path d="M 15,50 A 35,35 0 0,1 85,50" fill="none" stroke="#dee2e6" stroke-width="8" stroke-dasharray="1 2.5" stroke-linecap="round"/>
+            <path d="M 25,50 A 25,25 0 0,1 75,50" fill="none" stroke="#ced4da" stroke-width="10" stroke-dasharray="1 3" stroke-linecap="round"/>
+        </svg>
 
-        <div class="fraction f-left">
-            <div class="content">
-                <!-- Ersetzen Sie dieses div durch ein <img src="..."> für echte Logos -->
-                <img src="assets/theleft.png">
+        <!-- Zentrale Information -->
+        <div class="center-info">
+            <h1>Europäisches Parlament</h1>
+            <h2>2024–2029</h2>
+            <p>720 Sitze</p>
+        </div>
+
+        <!-- Fraktionen -->
+        <div class="fraction-node f-left">
+            <div class="node-closed">LEFT</div>
+            <div class="node-open">
+                <img src="assets/theleft.png" alt="The Left">
                 <div class="seats">46</div>
-                <div class="name">Sitze</div>
+                <div class="label">Sitze</div>
             </div>
         </div>
 
-        <div class="fraction f-sd">
-            <div class="content">
-                <div class="logo-placeholder">S&D</div>
+        <div class="fraction-node f-sd">
+            <div class="node-closed">S&D</div>
+            <div class="node-open">
+                <img src="assets/sd.png" alt="S&D">
                 <div class="seats">136</div>
-                <div class="name">Sitze</div>
+                <div class="label">Sitze</div>
             </div>
         </div>
 
-        <div class="fraction f-greens">
-            <div class="content">
-                <div class="logo-placeholder">Greens/EFA</div>
+        <div class="fraction-node f-greens">
+            <div class="node-closed">Grüne</div>
+            <div class="node-open">
+                <img src="assets/greensefa.png" alt="Greens/EFA">
                 <div class="seats">53</div>
-                <div class="name">Sitze</div>
+                <div class="label">Sitze</div>
             </div>
         </div>
 
-        <div class="fraction f-renew">
-            <div class="content">
-                <div class="logo-placeholder">renew europe.</div>
+        <div class="fraction-node f-renew">
+            <div class="node-closed">Renew</div>
+            <div class="node-open">
+                <img src="assets/reneweuropa.png" alt="Renew Europe">
                 <div class="seats">77</div>
-                <div class="name">Sitze</div>
+                <div class="label">Sitze</div>
             </div>
         </div>
 
-        <div class="fraction f-epp">
-            <div class="content">
-                <div class="logo-placeholder">EPP</div>
+        <div class="fraction-node f-epp">
+            <div class="node-closed">EPP</div>
+            <div class="node-open">
+                <!-- WICHTIG: Die epp.png fehlte in Ihrer Aufzählung! Bitte hinzufügen. -->
+                <img src="assets/epp.png" alt="EPP">
                 <div class="seats">188</div>
-                <div class="name">Sitze</div>
+                <div class="label">Sitze</div>
             </div>
         </div>
 
-        <div class="fraction f-ecr">
-            <div class="content">
-                <div class="logo-placeholder">ECR</div>
+        <div class="fraction-node f-ecr">
+            <div class="node-closed">ECR</div>
+            <div class="node-open">
+                <img src="assets/ecr.png" alt="ECR">
                 <div class="seats">78</div>
-                <div class="name">Sitze</div>
+                <div class="label">Sitze</div>
             </div>
         </div>
 
-        <div class="fraction f-patriots">
-            <div class="content">
-                <div class="logo-placeholder">PATRIOTS</div>
+        <div class="fraction-node f-patriots">
+            <div class="node-closed">Patriots</div>
+            <div class="node-open">
+                <img src="assets/patriots.png" alt="Patriots for Europe">
                 <div class="seats">84</div>
-                <div class="name">Sitze</div>
+                <div class="label">Sitze</div>
             </div>
         </div>
 
-        <div class="fraction f-esn">
-            <div class="content">
-                <div class="logo-placeholder">ESN</div>
+        <div class="fraction-node f-esn">
+            <div class="node-closed">ESN</div>
+            <div class="node-open">
+                <img src="assets/esn.png" alt="ESN">
                 <div class="seats">25</div>
-                <div class="name">Sitze</div>
+                <div class="label">Sitze</div>
             </div>
         </div>
 
-        <div class="fraction f-ni">
-            <div class="content">
-                <div class="logo-placeholder">NI</div>
+        <div class="fraction-node f-ni">
+            <div class="node-closed">NI</div>
+            <div class="node-open">
+                <img src="assets/nofraction.png" alt="Fraktionslos">
                 <div class="seats">32</div>
-                <div class="name">Fraktionslos</div>
+                <div class="label">Fraktionslos</div>
             </div>
         </div>
 
