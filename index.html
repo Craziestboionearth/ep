@@ -9,19 +9,21 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #ffffff;
+            background-color: #121212; /* Dunkler Hintergrund */
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
+            color: #ffffff;
         }
 
         .chart-container {
             position: relative;
             width: 100%;
             max-width: 900px;
-            aspect-ratio: 16 / 9;
+            /* Aspect Ratio exakt passend zur SVG viewBox (200/120) für präzise Tooltip-Positionierung */
+            aspect-ratio: 200 / 120;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -35,24 +37,24 @@
         }
 
         .faction-path {
-            stroke: #ffffff;
+            stroke: #121212; /* Passend zum dunklen Hintergrund */
             stroke-width: 1.5;
-            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-            transform-origin: 100px 105px; /* Zentrum des Halbkreises im viewBox */
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), stroke-width 0.2s;
+            transform-origin: 100px 105px; /* Zentrum des Halbkreises */
             cursor: pointer;
         }
 
-        /* Der Zoom-Effekt beim Hovern */
+        /* Zoom-Effekt beim Hovern */
         .faction-path:hover {
             transform: scale(1.08);
             stroke-width: 0.5;
             z-index: 10;
         }
 
-        /* Zentraler statischer Text */
+        /* Zentraler Text (angepasst für Dark Mode) */
         .center-text {
             position: absolute;
-            bottom: 15%;
+            bottom: 12%;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
@@ -62,7 +64,7 @@
         .center-text .seats {
             font-size: 3vw;
             font-weight: bold;
-            color: #000;
+            color: #ffffff;
             margin-bottom: 5px;
             line-height: 1;
         }
@@ -70,34 +72,33 @@
         .center-text h1 {
             font-size: 2.2vw;
             margin: 10px 0 0 0;
-            color: #000;
+            color: #ffffff;
         }
 
         .center-text h2 {
             font-size: 1.8vw;
             margin: 0;
-            color: #333;
+            color: #aaaaaa;
             font-weight: normal;
         }
 
-        /* Tooltip (erscheint beim Hovern über einen Kreisabschnitt) */
+        /* Tooltip (Dark Mode und feste Positionierung) */
         .tooltip {
-            position: fixed;
-            top: -1000px;
-            left: -1000px;
-            background: white;
+            position: absolute; /* Relativ zur chart-container */
+            background: #1e1e1e;
             border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
             padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.2s ease;
+            /* Animation für das "Herausploppen" */
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 100;
             min-width: 120px;
-            border: 2px solid #eee;
+            border: 2px solid #333;
         }
 
         .tooltip img {
@@ -110,13 +111,13 @@
         .tooltip .tt-seats {
             font-size: 24px;
             font-weight: 900;
-            color: #333;
+            color: #ffffff;
         }
 
         .tooltip .tt-label {
             font-size: 12px;
             text-transform: uppercase;
-            color: #666;
+            color: #888888;
             font-weight: bold;
         }
     </style>
@@ -132,17 +133,16 @@
             <h1>Europäisches Parlament</h1>
             <h2>2024–2029</h2>
         </div>
-    </div>
 
-    <!-- Das interaktive Overlay -->
-    <div class="tooltip" id="tooltip">
-        <img id="tt-img" src="" alt="Logo">
-        <div class="tt-seats" id="tt-seats">0</div>
-        <div class="tt-label">Sitze</div>
+        <!-- Das interaktive Overlay (jetzt innerhalb des Containers) -->
+        <div class="tooltip" id="tooltip">
+            <img id="tt-img" src="" alt="Logo">
+            <div class="tt-seats" id="tt-seats">0</div>
+            <div class="tt-label">Sitze</div>
+        </div>
     </div>
 
     <script>
-        // Daten der Fraktionen (Reihenfolge von Links nach Rechts)
         const factions = [
             { id: 'left', seats: 46, color: '#c92a2a', file: 'assets/theleft.png' },
             { id: 'sd', seats: 136, color: '#e3001b', file: 'assets/sd.png' },
@@ -161,15 +161,12 @@
         const ttImg = document.getElementById('tt-img');
         const ttSeats = document.getElementById('tt-seats');
 
-        // Parameter für die Kreisberechnung
-        const cx = 100; // Zentrum X
-        const cy = 105; // Zentrum Y (leicht nach unten versetzt)
-        const radiusOuter = 95; // Äußerer Radius
-        const radiusInner = 45; // Innerer Radius
+        const cx = 100;
+        const cy = 105;
+        const radiusOuter = 95;
+        const radiusInner = 45;
 
-        // Hilfsfunktion: Berechnet X/Y Koordinaten auf Basis eines Prozentwerts (0 bis 1) des Halbkreises
         function getCoordinates(percent, radius) {
-            // PI (180 Grad) ist links, 0 ist rechts
             const angle = Math.PI - (percent * Math.PI);
             return {
                 x: cx + Math.cos(angle) * radius,
@@ -179,20 +176,30 @@
 
         let cumulativePercent = 0;
 
-        // Generiere die SVG-Pfade für jede Fraktion
         factions.forEach(faction => {
             const percent = faction.seats / totalSeats;
             const startPercent = cumulativePercent;
             const endPercent = cumulativePercent + percent;
             cumulativePercent += percent;
 
-            // Start- und Endpunkte für den äußeren und inneren Bogen
+            // Berechne die Mitte des Abschnitts für die Tooltip-Position
+            const middlePercent = startPercent + (percent / 2);
+            const middleAngle = Math.PI - (middlePercent * Math.PI);
+
+            // Tooltip-Anker etwas außerhalb des äußeren Radius setzen
+            const anchorRadius = radiusOuter + 5;
+            const anchorX = cx + Math.cos(middleAngle) * anchorRadius;
+            const anchorY = cy - Math.sin(middleAngle) * anchorRadius;
+
+            // Umrechnung in Prozent für die CSS absolute Positionierung (basierend auf 200x120 viewBox)
+            const tooltipLeft = (anchorX / 200) * 100;
+            const tooltipTop = (anchorY / 120) * 100;
+
             const startOuter = getCoordinates(startPercent, radiusOuter);
             const endOuter = getCoordinates(endPercent, radiusOuter);
             const startInner = getCoordinates(startPercent, radiusInner);
             const endInner = getCoordinates(endPercent, radiusInner);
 
-            // SVG Path Syntax (M = Move, A = Arc, L = Line, Z = Close)
             const pathData = [
                 `M ${startOuter.x} ${startOuter.y}`,
                 `A ${radiusOuter} ${radiusOuter} 0 0 1 ${endOuter.x} ${endOuter.y}`,
@@ -201,34 +208,48 @@
                 `Z`
             ].join(' ');
 
-            // Pfad-Element erstellen
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('d', pathData);
             path.setAttribute('fill', faction.color);
             path.setAttribute('class', 'faction-path');
 
-            // Hover-Events für den Tooltip hinzufügen
             path.addEventListener('mouseenter', () => {
-                tooltip.style.opacity = '1';
                 ttImg.src = faction.file;
                 ttSeats.textContent = faction.seats;
                 tooltip.style.borderColor = faction.color;
+
+                // Position setzen
+                tooltip.style.left = `${tooltipLeft}%`;
+                tooltip.style.top = `${tooltipTop}%`;
+
+                // Transform anpassen, damit der Tooltip je nach Seite korrekt ausrichtet
+                let transformBase = "";
+                if (tooltipLeft < 50) {
+                    // Linke Hälfte: Tooltip nach links verschieben, damit er nicht den Graphen überdeckt
+                    transformBase = "translate(-110%, -50%)";
+                } else {
+                    // Rechte Hälfte: Tooltip nach rechts klappen
+                    transformBase = "translate(10%, -50%)";
+                }
+
+                // Animation starten
+                tooltip.style.transform = `${transformBase} scale(0.8)`; // Startwert für Animation
+
+                // Kurzer Delay, damit der Browser den Startwert registriert, dann in Endposition animieren
+                requestAnimationFrame(() => {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.transform = `${transformBase} scale(1)`;
+                });
             });
 
             path.addEventListener('mouseleave', () => {
                 tooltip.style.opacity = '0';
+                // Behalte die letzte Transform-Richtung bei für ein sanftes Ausblenden
+                const currentTransform = tooltip.style.transform.replace('scale(1)', 'scale(0.8)');
+                tooltip.style.transform = currentTransform;
             });
 
             svg.appendChild(path);
-        });
-
-        // Tooltip soll der Maus folgen
-        document.addEventListener('mousemove', (e) => {
-            if (tooltip.style.opacity === '1') {
-                // Leichter Versatz nach rechts unten, damit der Cursor das Bild nicht verdeckt
-                tooltip.style.left = (e.pageX + 15) + 'px';
-                tooltip.style.top = (e.pageY + 15) + 'px';
-            }
         });
     </script>
 
