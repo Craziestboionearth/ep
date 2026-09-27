@@ -9,7 +9,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #121212; /* Dunkler Hintergrund */
+            background-color: #121212;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -22,11 +22,68 @@
             position: relative;
             width: 100%;
             max-width: 900px;
-            /* Aspect Ratio exakt passend zur SVG viewBox (200/120) für präzise Tooltip-Positionierung */
             aspect-ratio: 200 / 120;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        /* Das neue Panel für die deutschen Parteien am linken Rand */
+        .german-panel {
+            position: fixed;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 220px;
+            background: #1e1e1e;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .german-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #aaaaaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .party-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .party-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            background: #ffffff; /* Weißer Hintergrund für transparente Logos */
+            border-radius: 6px;
+            padding: 2px;
+        }
+
+        .party-item span {
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .no-parties {
+            font-size: 14px;
+            color: #888;
+            font-style: italic;
         }
 
         /* SVG Styling */
@@ -37,21 +94,20 @@
         }
 
         .faction-path {
-            stroke: #121212; /* Passend zum dunklen Hintergrund */
+            stroke: #121212;
             stroke-width: 1.5;
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), stroke-width 0.2s;
-            transform-origin: 100px 105px; /* Zentrum des Halbkreises */
+            transform-origin: 100px 105px;
             cursor: pointer;
         }
 
-        /* Zoom-Effekt beim Hovern */
         .faction-path:hover {
             transform: scale(1.08);
             stroke-width: 0.5;
             z-index: 10;
         }
 
-        /* Zentraler Text (angepasst für Dark Mode) */
+        /* Zentraler Text */
         .center-text {
             position: absolute;
             bottom: 12%;
@@ -62,7 +118,7 @@
         }
 
         .center-text .seats {
-            font-size: 1.5vw;
+            font-size: 1vw;
             font-weight: bold;
             color: #ffffff;
             margin-bottom: 5px;
@@ -82,9 +138,9 @@
             font-weight: normal;
         }
 
-        /* Tooltip (Dark Mode und feste Positionierung) */
+        /* Tooltip an der Grafik */
         .tooltip {
-            position: absolute; /* Relativ zur chart-container */
+            position: absolute;
             background: #1e1e1e;
             border-radius: 8px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.5);
@@ -94,7 +150,6 @@
             align-items: center;
             pointer-events: none;
             opacity: 0;
-            /* Animation für das "Herausploppen" */
             transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 100;
             min-width: 120px;
@@ -124,8 +179,13 @@
 </head>
 <body>
 
+    <!-- Linkes Panel für deutsche Parteien -->
+    <div class="german-panel" id="german-panel">
+        <h3>Deutsche Parteien</h3>
+        <div id="german-party-list"></div>
+    </div>
+
     <div class="chart-container">
-        <!-- SVG Container für die Kreisabschnitte -->
         <svg viewBox="0 0 200 120" id="hemicycle"></svg>
 
         <div class="center-text">
@@ -134,7 +194,6 @@
             <h2>2024–2029</h2>
         </div>
 
-        <!-- Das interaktive Overlay (jetzt innerhalb des Containers) -->
         <div class="tooltip" id="tooltip">
             <img id="tt-img" src="" alt="Logo">
             <div class="tt-seats" id="tt-seats">0</div>
@@ -144,15 +203,64 @@
 
     <script>
         const factions = [
-            { id: 'left', seats: 46, color: '#c92a2a', file: 'assets/theleft.png' },
-            { id: 'sd', seats: 136, color: '#e3001b', file: 'assets/sd.png' },
-            { id: 'greens', seats: 53, color: '#2b8a3e', file: 'assets/greensefa.png' },
-            { id: 'renew', seats: 77, color: '#0087dc', file: 'assets/reneweurope.png' },
-            { id: 'epp', seats: 188, color: '#003399', file: 'assets/epp.png' },
-            { id: 'ecr', seats: 78, color: '#004a99', file: 'assets/ecr.png' },
-            { id: 'patriots', seats: 84, color: '#1c355e', file: 'assets/patriots.png' },
-            { id: 'esn', seats: 25, color: '#152e4d', file: 'assets/esn.png' },
-            { id: 'ni', seats: 32, color: '#777777', file: 'assets/nofraction.png' }
+            {
+                id: 'left', seats: 46, color: '#c92a2a', file: 'assets/theleft.png',
+                germanParties: [
+                    { name: 'Die Linke', img: 'assets/dielinke.png' },
+                    { name: 'Tierschutzpartei', img: 'assets/tierschutzpartei.png' }
+                ]
+            },
+            {
+                id: 'sd', seats: 136, color: '#e3001b', file: 'assets/sd.png',
+                germanParties: [
+                    { name: 'SPD', img: 'assets/spd.png' }
+                ]
+            },
+            {
+                id: 'greens', seats: 53, color: '#2b8a3e', file: 'assets/greensefa.png',
+                germanParties: [
+                    { name: 'Grüne', img: 'assets/gruene.png' },
+                    { name: 'Volt', img: 'assets/volt.png' }
+                ]
+            },
+            {
+                id: 'renew', seats: 77, color: '#0087dc', file: 'assets/reneweurope.png',
+                germanParties: [
+                    { name: 'FDP', img: 'assets/fdp.png' },
+                    { name: 'Freie Wähler', img: 'assets/freiewaehler.png' }
+                ]
+            },
+            {
+                id: 'epp', seats: 188, color: '#003399', file: 'assets/epp.png',
+                germanParties: [
+                    { name: 'CDU', img: 'assets/cdu.png' },
+                    { name: 'CSU', img: 'assets/csu.png' },
+                    { name: 'ÖDP', img: 'assets/oedp.png' },
+                    { name: 'Familienpartei', img: 'assets/familienpartei.png' }
+                ]
+            },
+            {
+                id: 'ecr', seats: 78, color: '#004a99', file: 'assets/ecr.png',
+                germanParties: []
+            },
+            {
+                id: 'patriots', seats: 84, color: '#1c355e', file: 'assets/patriots.png',
+                germanParties: []
+            },
+            {
+                id: 'esn', seats: 25, color: '#152e4d', file: 'assets/esn.png',
+                germanParties: [
+                    { name: 'AfD', img: 'assets/afd.png' }
+                ]
+            },
+            {
+                id: 'ni', seats: 32, color: '#777777', file: 'assets/nofraction.png',
+                germanParties: [
+                    { name: 'BSW', img: 'assets/bsw.png' },
+                    { name: 'Die PARTEI', img: 'assets/diepartei.png' },
+                    { name: 'PdF', img: 'assets/pdf.png' }
+                ]
+            }
         ];
 
         const totalSeats = 720;
@@ -160,6 +268,9 @@
         const tooltip = document.getElementById('tooltip');
         const ttImg = document.getElementById('tt-img');
         const ttSeats = document.getElementById('tt-seats');
+
+        const germanPanel = document.getElementById('german-panel');
+        const germanPartyList = document.getElementById('german-party-list');
 
         const cx = 100;
         const cy = 105;
@@ -182,16 +293,13 @@
             const endPercent = cumulativePercent + percent;
             cumulativePercent += percent;
 
-            // Berechne die Mitte des Abschnitts für die Tooltip-Position
             const middlePercent = startPercent + (percent / 2);
             const middleAngle = Math.PI - (middlePercent * Math.PI);
 
-            // Tooltip-Anker etwas außerhalb des äußeren Radius setzen
             const anchorRadius = radiusOuter + 5;
             const anchorX = cx + Math.cos(middleAngle) * anchorRadius;
             const anchorY = cy - Math.sin(middleAngle) * anchorRadius;
 
-            // Umrechnung in Prozent für die CSS absolute Positionierung (basierend auf 200x120 viewBox)
             const tooltipLeft = (anchorX / 200) * 100;
             const tooltipTop = (anchorY / 120) * 100;
 
@@ -214,37 +322,49 @@
             path.setAttribute('class', 'faction-path');
 
             path.addEventListener('mouseenter', () => {
+                // Zentrales Tooltip konfigurieren
                 ttImg.src = faction.file;
                 ttSeats.textContent = faction.seats;
                 tooltip.style.borderColor = faction.color;
 
-                // Position setzen
                 tooltip.style.left = `${tooltipLeft}%`;
                 tooltip.style.top = `${tooltipTop}%`;
 
-                // Transform anpassen, damit der Tooltip je nach Seite korrekt ausrichtet
                 let transformBase = "";
                 if (tooltipLeft < 50) {
-                    // Linke Hälfte: Tooltip nach links verschieben, damit er nicht den Graphen überdeckt
                     transformBase = "translate(-110%, -50%)";
                 } else {
-                    // Rechte Hälfte: Tooltip nach rechts klappen
                     transformBase = "translate(10%, -50%)";
                 }
 
-                // Animation starten
-                tooltip.style.transform = `${transformBase} scale(0.8)`; // Startwert für Animation
+                tooltip.style.transform = `${transformBase} scale(0.8)`;
 
-                // Kurzer Delay, damit der Browser den Startwert registriert, dann in Endposition animieren
+                // Linkes Panel für deutsche Parteien konfigurieren
+                germanPanel.style.borderColor = faction.color;
+                germanPartyList.innerHTML = '';
+
+                if (faction.germanParties.length > 0) {
+                    faction.germanParties.forEach(party => {
+                        const div = document.createElement('div');
+                        div.className = 'party-item';
+                        div.innerHTML = `<img src="${party.img}" alt="${party.name}"><span>${party.name}</span>`;
+                        germanPartyList.appendChild(div);
+                    });
+                } else {
+                    germanPartyList.innerHTML = '<span class="no-parties">Keine Abgeordneten aus Deutschland.</span>';
+                }
+
+                // Animationen starten
                 requestAnimationFrame(() => {
                     tooltip.style.opacity = '1';
                     tooltip.style.transform = `${transformBase} scale(1)`;
+                    germanPanel.style.opacity = '1';
                 });
             });
 
             path.addEventListener('mouseleave', () => {
                 tooltip.style.opacity = '0';
-                // Behalte die letzte Transform-Richtung bei für ein sanftes Ausblenden
+                germanPanel.style.opacity = '0';
                 const currentTransform = tooltip.style.transform.replace('scale(1)', 'scale(0.8)');
                 tooltip.style.transform = currentTransform;
             });
